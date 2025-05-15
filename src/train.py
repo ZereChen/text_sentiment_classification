@@ -160,13 +160,18 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
     return model
 
 def main():
-    # 检测并使用MPS加速 (Apple Silicon Mac) 或 回退到CPU
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
+    # 默认使用CPU
+    device = torch.device("cpu")  
+    # 判断GPU是否可用
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print("使用GPU加速训练")
+    # 判断MPS加速 (Apple Silicon Mac)是否可用
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        device = torch.device("mps") 
         print("使用MPS加速训练 (Apple GPU)")
-    else:
-        device = torch.device("cpu")
-        print("MPS不可用, 使用CPU训练")
+
+    print(f"使用设备: {device}")
 
     # 加载数据
     print("加载数据...")
