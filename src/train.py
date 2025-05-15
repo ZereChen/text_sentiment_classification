@@ -136,7 +136,7 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
 
     # 绘制损失曲线
     plt.figure(figsize=(10, 5))
-    epochs = np.arange(1, num_epochs + 1)
+    epochs = np.arange(1, len(train_losses) + 1)  # 使用实际训练的epoch数
     plt.plot(epochs, train_losses, 'b-', label='Training Loss')
     plt.plot(epochs, val_losses, 'r-', label='Validation Loss')
     plt.title('Training and Validation Loss')
