@@ -167,9 +167,11 @@ def main():
         device = torch.device("cuda")
         print("使用GPU加速训练")
     # 判断MPS加速 (Apple Silicon Mac)是否可用
-    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+    elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
         device = torch.device("mps") 
         print("使用MPS加速训练 (Apple GPU)")
+    else:
+        print("没有可用的GPU加速，使用CPU训练")
 
     print(f"使用设备: {device}")
 
