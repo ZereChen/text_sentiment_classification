@@ -102,6 +102,7 @@ def predict_sentiment(text: str, max_length: int = 128) -> tuple:
         logger.error(f"预测失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"预测失败: {str(e)}")
 
+# curl -X POST "http://localhost:8000/predict"  -H "Content-Type: application/json" -d '{"text": ""}'
 @app.post("/predict", response_model=SentimentResponse)
 async def predict(input_data: TextInput):
     """

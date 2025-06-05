@@ -135,7 +135,7 @@ def cross_validation(
     ensemble = ModelEnsemble()  # 创建空的集成模型
 
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
-        print(f"\n训练第 {fold + 1} 折")
+        print(f"\n训练第 {fold} 折")
 
         # 初始化模型和tokenizer
         model = BertClassifier(
@@ -162,7 +162,7 @@ def cross_validation(
 
         # 训练模型
         model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
-        print(f"第 {fold + 1} 折验证集 F1 分数: {val_f1:.4f}")
+        print(f"第 {fold} 折验证集 F1 分数: {val_f1:.4f}")
 
         # 将模型和验证F1分数添加到集成模型中
         ensemble.add_model(model, val_f1)
@@ -171,7 +171,7 @@ def cross_validation(
     print("\n所有模型的信息:")
     for info in ensemble.get_model_info():
         print(f"模型 {info['model_index']}: 验证F1分数 = {info['val_f1']:.4f}")
-    print(f"最佳验证F1分数: {ensemble.best_val_f1:.4f}, 最佳模型索引: {ensemble.best_model_index}")
+    print(f"最佳验证F1分数: {ensemble.best_val_f1:.4f}, 最佳模型下标: {ensemble.best_model_index}")
 
     return ensemble
 
