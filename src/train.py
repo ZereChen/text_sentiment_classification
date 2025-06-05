@@ -206,7 +206,7 @@ def main():
 
     # 初始化模型 和 tokenizer
     print("初始化BERT模型 和 tokenizer...")
-    model = BertClassifier('bert-base-chinese', dropout_rate=0.3)
+    model = BertClassifier('google-bert/bert-base-chinese', dropout_rate=0.3)
     model.to(device)
 
     # 创建数据集

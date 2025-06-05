@@ -56,7 +56,7 @@ async def startup_event():
             raise FileNotFoundError(f"模型文件不存在: {model_path}")
 
         # 加载模型
-        model = BertClassifier('bert-base-chinese')
+        model = BertClassifier('google-bert/bert-base-chinese')
         model.load_state_dict(torch.load(model_path))
         model.eval()
 

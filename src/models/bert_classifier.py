@@ -4,7 +4,7 @@ from src.utils.model_loader import ModelLoader
 class BertClassifier(nn.Module):
     def __init__(self, bert_model_name, num_classes=2, dropout_rate=0.1):
         super(BertClassifier, self).__init__()
-        bert, tokenizer = ModelLoader.load_pretrained(bert_model_name)
+        bert, tokenizer = ModelLoader.load_pretrained(model_name = bert_model_name, is_modelscope=True)
         self.bert = bert
         self.tokenizer = tokenizer
         self.dropout = nn.Dropout(dropout_rate) # 随机丢弃一些神经元，防止过拟合
