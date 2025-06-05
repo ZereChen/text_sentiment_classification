@@ -19,13 +19,19 @@ os.makedirs('outputs', exist_ok=True)
 
 def train_model(model, train_loader, val_loader, device, num_epochs=10):
     # AdamW优化器 - 增加权重衰减（L2正则化）
-    optimizer = AdamW(model.parameters(), lr=2e-5, weight_decay=0.01)
+    optimizer = AdamW(
+        model.parameters(),
+        lr=2e-5,                # 学习率，决定每次参数更新的步长。 太大：训练不稳定，可能无法收敛；太小：训练速度慢，可能陷入局部最优。建议范围：1e-5 到 5e-5
+        weight_decay=0.01,      # L2正则化系数，控制模型复杂度，防止过拟合。太大：模型欠拟合；太小：模型过拟合。建议范围：0.01 到 0.1
+        betas=(0.9, 0.999),     # 动量参数，帮助优化器跳出局部最优。beta1：控制一阶矩估计；beta2：控制二阶矩估计。
+        eps=1e-8                # 数值稳定性参数
+    )
 
     # 学习率调度器
-    total_steps = len(train_loader) * num_epochs # 总步数 = 每个 epoch 中的 batch数 * 训练轮数
+    total_steps = len(train_loader) * num_epochs # 总训练步数 = 每个 epoch 中的 batch数 * 训练轮数
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
-        num_warmup_steps=0.1 * total_steps, # 前10%的步数用于预热
+        num_warmup_steps=0.1 * total_steps, # 前10%的步数用于预热，帮助模型在开始时稳定训练。太大：浪费训练时间；太小：模型不稳定。建议范围：总步数的 5%-10%
         num_training_steps=total_steps
     )
 
@@ -41,7 +47,7 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
     # 早停机制
     best_val_loss = float('inf') #初始值为正无穷大
     best_model_state = None # 最佳模型状态
-    patience = 3 # 早停轮数
+    patience = 3 # 早停轮数。决定模型在验证集性能不再提升时继续训练的轮数，太大：训练时间过长；太小：可能过早停止。建议范围：3-10
     counter = 0 # 计数器
 
     for epoch in range(num_epochs):
@@ -64,7 +70,7 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
 
             # 反向传播阶段
             loss.backward() # 反向传播
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # 梯度裁剪，防止梯度爆炸
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # 梯度裁剪，防止梯度爆炸。太大：可能梯度爆炸；太小：可能梯度消失。建议范围：0.5-1.0
             optimizer.step() # 根据梯度更新模型参数
             scheduler.step() # 更新学习率
 
@@ -181,19 +187,9 @@ def plot_curves(train_losses, val_losses, train_accs, val_accs):
     plt.savefig('outputs/accuracy_curve.png')
 
 def main():
-    # 默认使用CPU
-    device = torch.device("cpu")  
-    # 判断GPU是否可用
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-        print("使用GPU加速训练")
-    # 判断MPS加速 (Apple Silicon Mac)是否可用
-    elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        device = torch.device("mps") 
-        print("使用MPS加速训练 (Apple GPU)")
-    else:
-        print("没有可用的GPU加速，使用CPU训练")
-
+    device = torch.device("cuda" if torch.cuda.is_available() else
+                          "mps" if torch.backends.mps.is_available() else
+                          "cpu")
     print(f"使用设备: {device}")
 
     # 加载数据
@@ -213,13 +209,14 @@ def main():
     # tokenizer = BertTokenizer.from_pretrained("/Users/chenzelei/.cache/huggingface/hub/models--bert-base-chinese")
 
     # 创建数据集
+    # max_length： 句子的截断长度。过小：丢失下文，速度快；过大：保留完整信息，但速度慢
     train_dataset = TextDataset(train_texts, train_labels, tokenizer, max_length=128)
     val_dataset = TextDataset(val_texts, val_labels, tokenizer, max_length=128)
 
     # 创建数据加载器，
     # Epoch：所有训练样本都已输入到模型中，称为一个Epoch
     # iteration：一批样本输入到模型中，称之为一个iteration
-    # batch_size：批大小，决定一个Epoch有多少个iteration
+    # batch_size：批大小，决定一个Epoch有多少个iteration。太大：内存消耗大，可能影响泛化能力；太小：训练不稳定，速度慢。建议范围：16-64
     # 样本总数：80，batch_size=8时， 那么 1 Epoch = 10 iteration
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32)
@@ -231,6 +228,7 @@ def main():
 
     # 训练模型
     print("开始训练...")
+    # num_epochs训练轮数：太大：可能过拟合；太小：可能欠拟合
     train_model(model, train_loader, val_loader, device, num_epochs=10)
 
     # 保存最终模型

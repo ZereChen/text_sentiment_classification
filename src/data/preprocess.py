@@ -22,6 +22,7 @@ class TextDataset(Dataset):
     def __getitem__(self, idx):
         text = str(self.texts[idx])
         label = self.labels[idx]
+        text = self.augment_text(text)
 
         encoding = self.tokenizer(
             text,
@@ -37,7 +38,15 @@ class TextDataset(Dataset):
             'attention_mask': encoding['attention_mask'].flatten(),  # 将attention_mask展平, 1表示实际token，0表示填充token，例如：[1, 1, 1, 1, 0, 0, ...]
             'labels': torch.tensor(label, dtype=torch.long)  # 将真实的label转换为PyTorch long张量
         }
-    
+
+    def augment_text(self, text):
+        # 实现数据增强方法
+        # 1. 同义词替换
+        # 2. 随机删除
+        # 3. 随机插入
+        # 4. 回译
+        return text
+
 def load_data(file_path):
     df = pd.read_csv(file_path)
     return df['review'].values, df['label'].values

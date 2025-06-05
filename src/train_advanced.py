@@ -1,0 +1,213 @@
+import json
+import os
+from typing import List, Dict, Any, Tuple
+
+import optuna
+import torch
+from sklearn.metrics import f1_score
+from sklearn.model_selection import KFold
+from torch.optim import AdamW
+from torch.utils.data import DataLoader, SubsetRandomSampler
+from tqdm import tqdm
+from transformers import BertTokenizer
+
+from data.preprocess import TextDataset, load_data
+from models.bert_classifier import BertClassifier
+
+
+class ModelEnsemble:
+    def __init__(self, models: List[BertClassifier]):
+        self.models = models
+
+    def predict(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+        predictions = []
+        for model in self.models:
+            model.eval()
+            with torch.no_grad():
+                outputs = model(input_ids, attention_mask)
+                predictions.append(outputs)
+        # 对多个模型的预测结果进行平均
+        ensemble_output = torch.mean(torch.stack(predictions), dim=0)
+        return ensemble_output
+
+
+def train_fold(
+        model: BertClassifier,
+        train_loader: DataLoader,
+        val_loader: DataLoader,
+        device: torch.device,
+        config: Dict[str, Any]
+) -> Tuple[BertClassifier, float]:
+    """训练单个折的模型"""
+    optimizer = AdamW(
+        model.parameters(),
+        lr=config['learning_rate'],
+        weight_decay=config['weight_decay']
+    )
+
+    criterion = torch.nn.CrossEntropyLoss()
+    best_val_f1 = 0
+    best_model_state = None
+
+    for epoch in range(config['num_epochs']):
+        # 训练阶段
+        model.train()
+        total_loss = 0
+        for batch in tqdm(train_loader, desc=f'Epoch {epoch + 1}/{config["num_epochs"]}'):
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
+
+            optimizer.zero_grad()
+            outputs = model(input_ids, attention_mask)
+            loss = criterion(outputs, labels)
+
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), config['max_grad_norm'])
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        # 验证阶段
+        model.eval()
+        val_preds = []
+        val_labels = []
+        with torch.no_grad():
+            for batch in val_loader:
+                input_ids = batch['input_ids'].to(device)
+                attention_mask = batch['attention_mask'].to(device)
+                labels = batch['labels'].to(device)
+
+                outputs = model(input_ids, attention_mask)
+                _, predicted = torch.max(outputs.data, 1)
+                val_preds.extend(predicted.cpu().numpy())
+                val_labels.extend(labels.cpu().numpy())
+
+        val_f1 = f1_score(val_labels, val_preds, average='weighted')
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
+            best_model_state = model.state_dict().copy()
+
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
+
+    return model, best_val_f1
+
+
+def cross_validation(
+        texts: List[str],
+        labels: List[int],
+        tokenizer: BertTokenizer,
+        device: torch.device,
+        config: Dict[str, Any]
+) -> ModelEnsemble:
+    """K折交叉验证训练"""
+    kfold = KFold(n_splits=config['n_folds'], shuffle=True, random_state=42)
+    models = []
+
+    for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
+        print(f"\n训练第 {fold + 1} 折")
+
+        # 创建数据加载器
+        train_sampler = SubsetRandomSampler(train_idx)
+        val_sampler = SubsetRandomSampler(val_idx)
+
+        dataset = TextDataset(texts, labels, tokenizer, max_length=config['max_length'])
+        train_loader = DataLoader(
+            dataset,
+            batch_size=config['batch_size'],
+            sampler=train_sampler
+        )
+        val_loader = DataLoader(
+            dataset,
+            batch_size=config['batch_size'],
+            sampler=val_sampler
+        )
+
+        # 初始化模型
+        model = BertClassifier(
+            bert_model_name=config['bert_model_name'],
+            num_classes=config['num_classes'],
+            dropout_rate=config['dropout_rate']
+        ).to(device)
+
+        # 训练模型
+        model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
+        print(f"第 {fold + 1} 折验证集 F1 分数: {val_f1:.4f}")
+
+        models.append(model)
+
+    return ModelEnsemble(models)
+
+
+def objective(trial: optuna.Trial, texts: List[str], labels: List[int], tokenizer: BertTokenizer,
+              device: torch.device) -> float:
+    """Optuna 超参数优化目标函数， suggest_categorical时离散型超参数，suggest_float时连续型超参数"""
+    config = {
+        'learning_rate': trial.suggest_float('learning_rate', 1e-5, 5e-5, log=True),
+        'weight_decay': trial.suggest_float('weight_decay', 0.01, 0.1),
+        'dropout_rate': trial.suggest_float('dropout_rate', 0.1, 0.5),
+        'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32]),
+        'max_length': trial.suggest_categorical('max_length', [64, 128, 256]),
+        'num_epochs': 3,  # 为了快速搜索，减少训练轮数
+        'n_folds': 3,  # 为了快速搜索，减少折数
+        'max_grad_norm': 1.0,
+        'bert_model_name': 'bert-base-chinese',
+        'num_classes': 2
+    }
+
+    ensemble = cross_validation(texts, labels, tokenizer, device, config)
+    return ensemble.best_val_f1
+
+
+def main():
+    # 设置设备
+    device = torch.device("cuda" if torch.cuda.is_available() else
+                          "mps" if torch.backends.mps.is_available() else
+                          "cpu")
+    print(f"使用设备: {device}")
+
+    # 加载数据
+    print("加载数据...")
+    texts, labels = load_data('../data/Data.csv')
+
+    # 初始化tokenizer
+    print("初始化BERT tokenizer...")
+    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+
+    # 超参数优化
+    print("开始超参数优化...")
+    study = optuna.create_study(direction='maximize') # 目标函数最值化，可以用["minimize", "maximize"]
+    study.optimize(lambda trial: objective(trial, texts, labels, tokenizer, device),
+                   n_trials=10)  # 超参数尝试多少组不同的超参数组合
+    print("\n最佳超参数:")
+    for key, value in study.best_params.items():
+        print(f"{key}: {value}")
+
+    # 使用最佳超参数进行最终训练
+    print("\n使用最佳超参数进行最终训练...")
+    best_config = {
+        **study.best_params,
+        'num_epochs': 10,  # 增加训练轮数
+        'n_folds': 5,  # 增加折数
+        'max_grad_norm': 1.0,
+        'bert_model_name': 'bert-base-chinese',
+        'num_classes': 2
+    }
+    with open('outputs/best_config.json', 'w') as f:
+        # 先保存最佳配置
+        json.dump(best_config, f, indent=4)
+
+    # 使用最佳配置进行交叉验证训练
+    final_ensemble = cross_validation(texts, labels, tokenizer, device, best_config)
+
+    # 保存集成模型
+    os.makedirs('outputs/ensemble', exist_ok=True)
+    for i, model in enumerate(final_ensemble.models):
+        torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i + 1}.pth')
+
+    print("训练完成！")
+
+
+if __name__ == '__main__':
+    main()
