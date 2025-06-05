@@ -1,11 +1,11 @@
-import torch
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from transformers import BertTokenizer
-import uvicorn
-from typing import List, Optional
 import logging
 from pathlib import Path
+from typing import List, Optional
+
+import torch
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from models.bert_classifier import BertClassifier
 
@@ -61,7 +61,7 @@ async def startup_event():
         model.eval()
 
         # 加载tokenizer
-        tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        tokenizer = model.tokenizer
         logger.info("模型和tokenizer加载成功")
     except Exception as e:
         logger.error(f"模型加载失败: {str(e)}")
@@ -127,10 +127,10 @@ async def predict(input_data: TextInput):
 async def predict_batch(input_data: BatchTextInput):
     """
     批量预测文本情感
-
+    
     Args:
         input_data: 包含文本列表和最大长度的输入数据
-
+        
     Returns:
         BatchSentimentResponse: 包含批量预测结果的响应
     """

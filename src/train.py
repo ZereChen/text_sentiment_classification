@@ -9,10 +9,11 @@ from sklearn.model_selection import train_test_split
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import BertTokenizer, get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup
 
 from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
+from utils.model_loader import load_pretrained
 
 # 创建保存模型和图表的目录
 os.makedirs('outputs', exist_ok=True)
@@ -203,15 +204,15 @@ def main():
 
     print(f"训练集大小：{len(train_texts)}，验证集大小：{len(val_texts)}")
 
-    # 初始化tokenizer
-    print("初始化BERT tokenizer...")
-    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-    # tokenizer = BertTokenizer.from_pretrained("/Users/chenzelei/.cache/huggingface/hub/models--bert-base-chinese")
+    # 初始化模型 和 tokenizer
+    print("初始化BERT模型 和 tokenizer...")
+    model = BertClassifier('bert-base-chinese', dropout_rate=0.3)
+    model.to(device)
 
     # 创建数据集
     # max_length： 句子的截断长度。过小：丢失下文，速度快；过大：保留完整信息，但速度慢
-    train_dataset = TextDataset(train_texts, train_labels, tokenizer, max_length=128)
-    val_dataset = TextDataset(val_texts, val_labels, tokenizer, max_length=128)
+    train_dataset = TextDataset(train_texts, train_labels, model.tokenizer, max_length=128)
+    val_dataset = TextDataset(val_texts, val_labels, model.tokenizer, max_length=128)
 
     # 创建数据加载器，
     # Epoch：所有训练样本都已输入到模型中，称为一个Epoch
@@ -221,10 +222,6 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32)
 
-    # 初始化模型 - 从models/bert_classifier.py文件中导入的BertClassifier类
-    print("初始化BERT模型...")
-    model = BertClassifier('bert-base-chinese', dropout_rate=0.3)
-    model.to(device)
 
     # 训练模型
     print("开始训练...")

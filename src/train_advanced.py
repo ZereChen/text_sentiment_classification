@@ -9,7 +9,6 @@ from sklearn.model_selection import KFold
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from tqdm import tqdm
-from transformers import BertTokenizer
 
 from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
@@ -97,7 +96,6 @@ def train_fold(
 def cross_validation(
         texts: List[str],
         labels: List[int],
-        tokenizer: BertTokenizer,
         device: torch.device,
         config: Dict[str, Any]
 ) -> ModelEnsemble:
@@ -108,11 +106,18 @@ def cross_validation(
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
         print(f"\n训练第 {fold + 1} 折")
 
+        # 初始化模型  和 tokenizer
+        model = (BertClassifier(
+            bert_model_name=config['bert_model_name'],
+            num_classes=config['num_classes'],
+            dropout_rate=config['dropout_rate']
+        ))
+        model.to(device)
+
         # 创建数据加载器
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
-
-        dataset = TextDataset(texts, labels, tokenizer, max_length=config['max_length'])
+        dataset = TextDataset(texts, labels, model.tokenizer, max_length=config['max_length'])
         train_loader = DataLoader(
             dataset,
             batch_size=config['batch_size'],
@@ -124,13 +129,6 @@ def cross_validation(
             sampler=val_sampler
         )
 
-        # 初始化模型
-        model = BertClassifier(
-            bert_model_name=config['bert_model_name'],
-            num_classes=config['num_classes'],
-            dropout_rate=config['dropout_rate']
-        ).to(device)
-
         # 训练模型
         model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
         print(f"第 {fold + 1} 折验证集 F1 分数: {val_f1:.4f}")
@@ -140,8 +138,7 @@ def cross_validation(
     return ModelEnsemble(models)
 
 
-def objective(trial: optuna.Trial, texts: List[str], labels: List[int], tokenizer: BertTokenizer,
-              device: torch.device) -> float:
+def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: torch.device) -> float:
     """Optuna 超参数优化目标函数， suggest_categorical时离散型超参数，suggest_float时连续型超参数"""
     config = {
         'learning_rate': trial.suggest_float('learning_rate', 1e-5, 5e-5, log=True),
@@ -156,7 +153,7 @@ def objective(trial: optuna.Trial, texts: List[str], labels: List[int], tokenize
         'num_classes': 2
     }
 
-    ensemble = cross_validation(texts, labels, tokenizer, device, config)
+    ensemble = cross_validation(texts, labels, device, config)
     return ensemble.best_val_f1
 
 
@@ -171,14 +168,10 @@ def main():
     print("加载数据...")
     texts, labels = load_data('../data/Data.csv')
 
-    # 初始化tokenizer
-    print("初始化BERT tokenizer...")
-    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-
     # 超参数优化
     print("开始超参数优化...")
     study = optuna.create_study(direction='maximize') # 目标函数最值化，可以用["minimize", "maximize"]
-    study.optimize(lambda trial: objective(trial, texts, labels, tokenizer, device),
+    study.optimize(lambda trial: objective(trial, texts, labels, device),
                    n_trials=10)  # 超参数尝试多少组不同的超参数组合
     print("\n最佳超参数:")
     for key, value in study.best_params.items():
@@ -199,7 +192,7 @@ def main():
         json.dump(best_config, f, indent=4)
 
     # 使用最佳配置进行交叉验证训练
-    final_ensemble = cross_validation(texts, labels, tokenizer, device, best_config)
+    final_ensemble = cross_validation(texts, labels, device, best_config)
 
     # 保存集成模型
     os.makedirs('outputs/ensemble', exist_ok=True)

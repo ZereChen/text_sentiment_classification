@@ -1,10 +1,12 @@
 import torch.nn as nn
-from transformers import BertModel
+from src.utils.model_loader import ModelLoader
 
 class BertClassifier(nn.Module):
     def __init__(self, bert_model_name, num_classes=2, dropout_rate=0.1):
         super(BertClassifier, self).__init__()
-        self.bert = BertModel.from_pretrained(bert_model_name)
+        bert, tokenizer = ModelLoader.load_pretrained(bert_model_name)
+        self.bert = bert
+        self.tokenizer = tokenizer
         self.dropout = nn.Dropout(dropout_rate) # 随机丢弃一些神经元，防止过拟合
         self.classifier = nn.Linear(self.bert.config.hidden_size, num_classes) # 线性层，将BERT的输出映射到 num_classes 个类别
 
