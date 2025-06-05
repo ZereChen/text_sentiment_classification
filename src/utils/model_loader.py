@@ -1,9 +1,7 @@
 import logging
 import os
 import shutil
-from typing import Optional, Union, Tuple, Any
-import torch
-from pathlib import Path
+from typing import Optional, Tuple, Any
 
 from transformers import AutoTokenizer, AutoModel
 

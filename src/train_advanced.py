@@ -15,8 +15,24 @@ from models.bert_classifier import BertClassifier
 
 
 class ModelEnsemble:
-    def __init__(self, models: List[BertClassifier]):
-        self.models = models
+    def __init__(self):
+        self.models = []  # 存储模型列表
+        self.val_f1_scores = []  # 存储对应的验证F1分数
+        self.best_val_f1 = 0.0  # 最佳验证F1分数
+        self.best_model_index = None
+
+    def add_model(self, model: BertClassifier, val_f1: float):
+        """
+        添加模型和其验证F1分数
+        
+        Args:
+            model: 训练好的模型
+            val_f1: 模型在验证集上的F1分数
+        """
+        self.models.append(model)
+        self.val_f1_scores.append(val_f1)
+        self.best_val_f1 = max(self.best_val_f1, val_f1)
+        self.best_model_index = self.val_f1_scores.index(self.best_val_f1)
 
     def predict(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         predictions = []
@@ -28,6 +44,21 @@ class ModelEnsemble:
         # 对多个模型的预测结果进行平均
         ensemble_output = torch.mean(torch.stack(predictions), dim=0)
         return ensemble_output
+
+    def get_model_info(self) -> List[Dict[str, Any]]:
+        """
+        获取所有模型的信息
+        
+        Returns:
+            List[Dict[str, Any]]: 包含每个模型的索引和验证F1分数的列表
+        """
+        return [
+            {
+                "model_index": i,
+                "val_f1": score
+            }
+            for i, score in enumerate(self.val_f1_scores)
+        ]
 
 
 def train_fold(
@@ -101,17 +132,17 @@ def cross_validation(
 ) -> ModelEnsemble:
     """K折交叉验证训练"""
     kfold = KFold(n_splits=config['n_folds'], shuffle=True, random_state=42)
-    models = []
+    ensemble = ModelEnsemble()  # 创建空的集成模型
 
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
         print(f"\n训练第 {fold + 1} 折")
 
-        # 初始化模型  和 tokenizer
-        model = (BertClassifier(
+        # 初始化模型和tokenizer
+        model = BertClassifier(
             bert_model_name=config['bert_model_name'],
             num_classes=config['num_classes'],
             dropout_rate=config['dropout_rate']
-        ))
+        )
         model.to(device)
 
         # 创建数据加载器
@@ -133,9 +164,16 @@ def cross_validation(
         model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
         print(f"第 {fold + 1} 折验证集 F1 分数: {val_f1:.4f}")
 
-        models.append(model)
+        # 将模型和验证F1分数添加到集成模型中
+        ensemble.add_model(model, val_f1)
 
-    return ModelEnsemble(models)
+    # 打印所有模型的信息
+    print("\n所有模型的信息:")
+    for info in ensemble.get_model_info():
+        print(f"模型 {info['model_index']}: 验证F1分数 = {info['val_f1']:.4f}")
+    print(f"最佳验证F1分数: {ensemble.best_val_f1:.4f}, 最佳模型索引: {ensemble.best_model_index}")
+
+    return ensemble
 
 
 def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: torch.device) -> float:
@@ -147,9 +185,9 @@ def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: 
         'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32]),
         'max_length': trial.suggest_categorical('max_length', [64, 128, 256]),
         'num_epochs': 3,  # 为了快速搜索，减少训练轮数
-        'n_folds': 3,  # 为了快速搜索，减少折数
+        'n_folds': 3,  # 为了快速搜索，减少折数, 每一折会进行 num_epochs 轮训练
         'max_grad_norm': 1.0,
-        'bert_model_name': 'bert-base-chinese',
+        'bert_model_name': 'google-bert/bert-base-chinese',
         'num_classes': 2
     }
 
@@ -184,7 +222,7 @@ def main():
         'num_epochs': 10,  # 增加训练轮数
         'n_folds': 5,  # 增加折数
         'max_grad_norm': 1.0,
-        'bert_model_name': 'bert-base-chinese',
+        'bert_model_name': 'google-bert/bert-base-chinese',
         'num_classes': 2
     }
     with open('outputs/best_config.json', 'w') as f:
@@ -197,7 +235,7 @@ def main():
     # 保存集成模型
     os.makedirs('outputs/ensemble', exist_ok=True)
     for i, model in enumerate(final_ensemble.models):
-        torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i + 1}.pth')
+        torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i}.pth')
 
     print("训练完成！")
 

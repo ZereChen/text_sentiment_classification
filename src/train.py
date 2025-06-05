@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +12,6 @@ from transformers import get_linear_schedule_with_warmup
 
 from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
-from utils.model_loader import load_pretrained
 
 # 创建保存模型和图表的目录
 os.makedirs('outputs', exist_ok=True)
