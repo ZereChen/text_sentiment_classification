@@ -233,6 +233,10 @@ def main():
     final_ensemble = cross_validation(texts, labels, device, best_config)
 
     # 保存集成模型
+    print("\n训练最终模型的信息:")
+    for info in final_ensemble.get_model_info():
+        print(f"训练最终模型 {info['model_index']}: 验证F1分数 = {info['val_f1']:.4f}")
+    print(f"最佳验证F1分数: {final_ensemble.best_val_f1:.4f}, 最佳模型下标: {final_ensemble.best_model_index}")
     os.makedirs('outputs/ensemble', exist_ok=True)
     for i, model in enumerate(final_ensemble.models):
         torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i}.pth')
