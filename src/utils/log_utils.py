@@ -1,8 +1,10 @@
 import logging
 import os
+import time
 from logging.handlers import RotatingFileHandler
 
 LOG_DIR = "logs"
+LOG_NAME = "app.log-" + str(time.time())
 os.makedirs(LOG_DIR, exist_ok=True)
 
 
@@ -10,19 +12,21 @@ class LoggerManager:
     _logger = None
 
     @staticmethod
-    def get_logger():
+    def get_logger(name: str = None):
         if LoggerManager._logger is not None:
             return LoggerManager._logger
 
         # 创建 logger 对象
-        logger = logging.getLogger("")
+        if name is None:
+            name = ""
+        logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
 
         # 防止重复添加 handler（多次调用时避免重复）
         if not logger.handlers:
             # 创建文件 handler，使用日志轮转机制
             file_handler = RotatingFileHandler(
-                os.path.join(LOG_DIR, "app.log"),
+                os.path.join(LOG_DIR, LOG_NAME),
                 maxBytes=1024 * 1024 * 50,  # 每个日志文件最大 50MB
                 backupCount=5,  # 最多保留 5 个备份文件
                 encoding="utf-8"
