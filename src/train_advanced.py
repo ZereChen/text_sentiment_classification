@@ -14,14 +14,15 @@ from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
 from src.utils.log_utils import LoggerManager
 
-logger = LoggerManager.get_logger()
+logger = LoggerManager.get_logger(__name__)
 
 class ModelEnsemble:
     def __init__(self):
         self.models = []  # 存储模型列表
         self.val_f1_scores = []  # 存储对应的验证F1分数
-        self.best_val_f1 = 0.0  # 最佳验证F1分数
         self.best_model_index = None
+        self.best_val_f1 = 0.0  # 最佳验证F1分数
+        self.avg_val_f1 = 0.0  # 平均验证F1分数
 
     def add_model(self, model: BertClassifier, val_f1: float):
         """
@@ -34,6 +35,7 @@ class ModelEnsemble:
         self.models.append(model)
         self.val_f1_scores.append(val_f1)
         self.best_val_f1 = max(self.best_val_f1, val_f1)
+        self.avg_val_f1 = sum(self.val_f1_scores) / len(self.val_f1_scores)
         self.best_model_index = self.val_f1_scores.index(self.best_val_f1)
 
     def predict(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
@@ -136,9 +138,9 @@ def cross_validation(
     kfold = KFold(n_splits=config['n_folds'], shuffle=True, random_state=42)
     ensemble = ModelEnsemble()  # 创建空的集成模型
     # 生成一个唯一值
-    unique_value = str(hash(tuple(config)))
+    unique_value = str(hash(tuple(config.items())))
 
-    logger.info(f"开始新一轮的交叉验证训练, 索引为: {unique_value}, 具体参数为: {config}")
+    logger.info(f"开始新一轮的K折交叉验证训练, 索引为: {unique_value}, 具体参数为: {config}")
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
         logger.info(f"索引{unique_value} 开始训练第 {fold} 折, 共 {config['n_folds']} 折")
 
@@ -174,7 +176,7 @@ def cross_validation(
 
     # 打印所有模型的信息
     logger.info(
-        f"此轮的交叉验证训练完成, 索引为: {unique_value}, 最佳F1分数: {ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {ensemble.best_model_index}, 以下是所有模型信息:")
+        f"此轮的K折交叉验证训练完成, 索引为: {unique_value}, 平均F1分数: {ensemble.avg_val_f1:.4f}, 最佳F1分数: {ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {ensemble.best_model_index}, 以下是所有模型信息:")
     for info in ensemble.get_model_info():
         logger.info(f"\t 模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
 
@@ -187,7 +189,7 @@ def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: 
         'learning_rate': trial.suggest_float('learning_rate', 1e-5, 5e-5, log=True),
         'weight_decay': trial.suggest_float('weight_decay', 0.01, 0.1),
         'dropout_rate': trial.suggest_float('dropout_rate', 0.1, 0.5),
-        'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32]),
+        'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32, 64]),
         'max_length': trial.suggest_categorical('max_length', [64, 128, 256]),
         'num_epochs': 3,  # 为了快速搜索，减少训练轮数
         'n_folds': 3,  # 为了快速搜索，减少折数, 每一折会进行 num_epochs 轮训练
@@ -211,37 +213,41 @@ def main():
     logger.info("加载数据...")
     texts, labels = load_data('../data/Data.csv')
 
-    # 超参数优化
-    logger.info("开始超参数优化...")
-    study = optuna.create_study(direction='maximize') # 目标函数最值化，可以用["minimize", "maximize"]
-    study.optimize(lambda trial: objective(trial, texts, labels, device),
-                   n_trials=10)  # 超参数尝试多少组不同的超参数组合
-    logger.info("获取最佳超参数成功，具体数值为:")
-    for key, value in study.best_params.items():
-        logger.info(f"{key}: {value}")
+    if not os.path.exists('outputs/best_config.json'):
+        # 超参数优化
+        logger.info("开始超参数优化...")
+        study = optuna.create_study(direction='maximize')  # 目标函数最值化，可以用["minimize", "maximize"]
+        study.optimize(lambda trial: objective(trial, texts, labels, device),
+                       n_trials=10)  # 超参数尝试多少组不同的超参数组合
+        logger.info("获取最佳超参数成功，具体数值为:")
+        for key, value in study.best_params.items():
+            logger.info(f"\t {key}: {value}")
 
-    # 使用最佳超参数进行最终训练
-    logger.info("使用最佳超参数进行最终训练...")
-    best_config = {
-        **study.best_params,
-        'num_epochs': 10,  # 增加训练轮数
-        'n_folds': 5,  # 增加折数
-        'max_grad_norm': 1.0,
-        'bert_model_name': 'google-bert/bert-base-chinese',
-        'num_classes': 2
-    }
-    with open('outputs/best_config.json', 'w') as f:
-        # 先保存最佳配置
-        json.dump(best_config, f, indent=4)
+        # 使用最佳超参数进行最终训练
+        logger.info("使用最佳超参数进行最终训练...")
+        best_config = {
+            **study.best_params,
+            'num_epochs': 10,
+            'n_folds': 5,
+            'max_grad_norm': 1.0,
+            'bert_model_name': 'google-bert/bert-base-chinese',
+            'num_classes': 2
+        }
+        with open('outputs/best_config.json', 'w') as f:
+            json.dump(best_config, f, indent=4)
+    else:
+        # 读取最佳超参数
+        with open('outputs/best_config.json', 'r') as f:
+            best_config = json.load(f)
 
     # 使用最佳配置进行交叉验证训练
     final_ensemble = cross_validation(texts, labels, device, best_config)
 
     # 保存集成模型
     logger.info(
-        f"最终训练结束，最佳验证F1分数: {final_ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {final_ensemble.best_model_index}, 以下是所有模型信息:")
+        f"最终训练结束，平均F1分数: {final_ensemble.avg_val_f1:.4f}, 最佳F1分数: {final_ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {final_ensemble.best_model_index}, 以下是所有模型信息:")
     for info in final_ensemble.get_model_info():
-        logger.info(f"\t 训练模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
+        logger.info(f"\t 最终训练模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
     os.makedirs('outputs/ensemble', exist_ok=True)
     for i, model in enumerate(final_ensemble.models):
         torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i}.pth')

@@ -5,7 +5,9 @@ from typing import Optional, Tuple, Any
 
 from transformers import AutoTokenizer, AutoModel
 
-logger = logging.getLogger(__name__)
+from src.utils.log_utils import LoggerManager
+
+logger = LoggerManager.get_logger(__name__)
 
 
 class ModelLoader:

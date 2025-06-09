@@ -14,7 +14,7 @@ from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
 from src.utils.log_utils import LoggerManager
 
-logger = LoggerManager.get_logger()
+logger = LoggerManager.get_logger(__name__)
 
 # 创建保存模型和图表的目录
 os.makedirs('outputs', exist_ok=True)
