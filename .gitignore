@@ -1,4 +1,5 @@
 # 虚拟环境
+**/.pynb_checkpoints/
 .venv/
 venv/
 __pycache__/
