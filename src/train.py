@@ -12,6 +12,9 @@ from transformers import get_linear_schedule_with_warmup
 
 from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
+from src.utils.log_utils import LoggerManager
+
+logger = LoggerManager.get_logger()
 
 # 创建保存模型和图表的目录
 os.makedirs('outputs', exist_ok=True)
@@ -86,7 +89,7 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
         train_accuracy = 100 * np.mean(np.array(all_preds) == np.array(all_labels)) # 计算在这一个epoch中，每个所有case的准确率
         train_losses.append(avg_loss)
         train_accs.append(train_accuracy)
-        print(f'Epoch {epoch + 1} - Train Loss: {avg_loss:.4f}, Training Accuracy: {train_accuracy:.2f}%')
+        logger.info(f'Epoch {epoch + 1} - Train Loss: {avg_loss:.4f}, Training Accuracy: {train_accuracy:.2f}%')
 
         # 验证阶段
         model.eval()
@@ -118,12 +121,12 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
         val_accuracy = 100 * np.mean(np.array(all_preds) == np.array(all_labels))
         val_losses.append(avg_val_loss)
         val_accs.append(val_accuracy)
-        print(f'Epoch {epoch + 1} - Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%')
+        logger.info(f'Epoch {epoch + 1} - Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%')
 
         # 更详细的评估指标
         report = classification_report(all_labels, all_preds, digits=4)
-        print("\n分类报告:")
-        print(report)
+        logger.info("\n分类报告:")
+        logger.info(report)
         
         # 早停检查
         if avg_val_loss < best_val_loss:
@@ -132,14 +135,14 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10):
             best_model_state = model.state_dict().copy()
             counter = 0
             torch.save(model.state_dict(), 'outputs/best_model.pth')
-            print("保存当前最佳模型!")
+            logger.info("保存当前最佳模型!")
         else:
             # 如果验证结果更差，则累加counter，当counter次数达到阈值，跳出epoch循环
             counter += 1
-            print(f"验证损失未改善。当前耐心: {counter}/{patience}")
+            logger.info(f"验证损失未改善。当前耐心: {counter}/{patience}")
             
         if counter >= patience:
-            print("早停! 验证损失已连续3轮未改善")
+            logger.info("早停! 验证损失已连续3轮未改善")
             break
 
     # 加载最佳模型状态
@@ -189,10 +192,10 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else
                           "mps" if torch.backends.mps.is_available() else
                           "cpu")
-    print(f"使用设备: {device}")
+    logger.info(f"使用设备: {device}")
 
     # 加载数据
-    print("加载数据...")
+    logger.info("加载数据...")
     texts, labels = load_data('../data/Data.csv')
 
     # 划分训练集和验证集，train_texts是训练集的输入，train_labels是训练集的标签，val_texts是验证集的输入，val_labels是验证集的标签
@@ -200,10 +203,10 @@ def main():
         texts, labels, test_size=0.2, random_state=42, stratify=labels
     )
 
-    print(f"训练集大小：{len(train_texts)}，验证集大小：{len(val_texts)}")
+    logger.info(f"训练集大小：{len(train_texts)}，验证集大小：{len(val_texts)}")
 
     # 初始化模型 和 tokenizer
-    print("初始化BERT模型 和 tokenizer...")
+    logger.info("初始化BERT模型 和 tokenizer...")
     model = BertClassifier('google-bert/bert-base-chinese', dropout_rate=0.3)
     model.to(device)
 
@@ -222,13 +225,13 @@ def main():
 
 
     # 训练模型
-    print("开始训练...")
+    logger.info("开始训练...")
     # num_epochs训练轮数：太大：可能过拟合；太小：可能欠拟合
     train_model(model, train_loader, val_loader, device, num_epochs=10)
 
     # 保存最终模型
     torch.save(model.state_dict(), 'outputs/final_model.pth')
-    print("模型训练完成！")
+    logger.info("模型训练完成！")
 
 if __name__ == '__main__':
     main()                                   

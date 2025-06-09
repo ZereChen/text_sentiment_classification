@@ -12,7 +12,9 @@ from tqdm import tqdm
 
 from data.preprocess import TextDataset, load_data
 from models.bert_classifier import BertClassifier
+from src.utils.log_utils import LoggerManager
 
+logger = LoggerManager.get_logger()
 
 class ModelEnsemble:
     def __init__(self):
@@ -133,9 +135,12 @@ def cross_validation(
     """K折交叉验证训练"""
     kfold = KFold(n_splits=config['n_folds'], shuffle=True, random_state=42)
     ensemble = ModelEnsemble()  # 创建空的集成模型
+    # 生成一个唯一值
+    unique_value = str(hash(tuple(config)))
 
+    logger.info(f"开始新一轮的交叉验证训练, 索引为: {unique_value}, 具体参数为: {config}")
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
-        print(f"\n训练第 {fold} 折")
+        logger.info(f"索引{unique_value} 开始训练第 {fold} 折, 共 {config['n_folds']} 折")
 
         # 初始化模型和tokenizer
         model = BertClassifier(
@@ -162,16 +167,16 @@ def cross_validation(
 
         # 训练模型
         model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
-        print(f"第 {fold} 折验证集 F1 分数: {val_f1:.4f}")
+        logger.info(f"索引{unique_value} 完成训练第 {fold} 折，F1分数: {val_f1:.4f}")
 
         # 将模型和验证F1分数添加到集成模型中
         ensemble.add_model(model, val_f1)
 
     # 打印所有模型的信息
-    print("\n所有模型的信息:")
+    logger.info(
+        f"此轮的交叉验证训练完成, 索引为: {unique_value}, 最佳F1分数: {ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {ensemble.best_model_index}, 以下是所有模型信息:")
     for info in ensemble.get_model_info():
-        print(f"模型 {info['model_index']}: 验证F1分数 = {info['val_f1']:.4f}")
-    print(f"最佳验证F1分数: {ensemble.best_val_f1:.4f}, 最佳模型下标: {ensemble.best_model_index}")
+        logger.info(f"\t 模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
 
     return ensemble
 
@@ -200,23 +205,23 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else
                           "mps" if torch.backends.mps.is_available() else
                           "cpu")
-    print(f"使用设备: {device}")
+    logger.info(f"使用设备: {device}")
 
     # 加载数据
-    print("加载数据...")
+    logger.info("加载数据...")
     texts, labels = load_data('../data/Data.csv')
 
     # 超参数优化
-    print("开始超参数优化...")
+    logger.info("开始超参数优化...")
     study = optuna.create_study(direction='maximize') # 目标函数最值化，可以用["minimize", "maximize"]
     study.optimize(lambda trial: objective(trial, texts, labels, device),
                    n_trials=10)  # 超参数尝试多少组不同的超参数组合
-    print("\n最佳超参数:")
+    logger.info("获取最佳超参数成功，具体数值为:")
     for key, value in study.best_params.items():
-        print(f"{key}: {value}")
+        logger.info(f"{key}: {value}")
 
     # 使用最佳超参数进行最终训练
-    print("\n使用最佳超参数进行最终训练...")
+    logger.info("使用最佳超参数进行最终训练...")
     best_config = {
         **study.best_params,
         'num_epochs': 10,  # 增加训练轮数
@@ -233,15 +238,15 @@ def main():
     final_ensemble = cross_validation(texts, labels, device, best_config)
 
     # 保存集成模型
-    print("\n训练最终模型的信息:")
+    logger.info(
+        f"最终训练结束，最佳验证F1分数: {final_ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {final_ensemble.best_model_index}, 以下是所有模型信息:")
     for info in final_ensemble.get_model_info():
-        print(f"训练最终模型 {info['model_index']}: 验证F1分数 = {info['val_f1']:.4f}")
-    print(f"最佳验证F1分数: {final_ensemble.best_val_f1:.4f}, 最佳模型下标: {final_ensemble.best_model_index}")
+        logger.info(f"\t 训练模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
     os.makedirs('outputs/ensemble', exist_ok=True)
     for i, model in enumerate(final_ensemble.models):
         torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i}.pth')
 
-    print("训练完成！")
+    logger.info("模型保存成功，训练完成！")
 
 
 if __name__ == '__main__':
