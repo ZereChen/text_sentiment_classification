@@ -223,8 +223,6 @@ def main():
         for key, value in study.best_params.items():
             logger.info(f"\t {key}: {value}")
 
-        # 使用最佳超参数进行最终训练
-        logger.info("使用最佳超参数进行最终训练...")
         best_config = {
             **study.best_params,
             'num_epochs': 10,
@@ -241,13 +239,10 @@ def main():
             best_config = json.load(f)
 
     # 使用最佳配置进行交叉验证训练
+    logger.info(f"使用最佳超参数进行最终训练，best_config具体数值为: {best_config}")
     final_ensemble = cross_validation(texts, labels, device, best_config)
 
     # 保存集成模型
-    logger.info(
-        f"最终训练结束，平均F1分数: {final_ensemble.avg_val_f1:.4f}, 最佳F1分数: {final_ensemble.best_val_f1:.4f}, 最佳模型下标(折数): {final_ensemble.best_model_index}, 以下是所有模型信息:")
-    for info in final_ensemble.get_model_info():
-        logger.info(f"\t 最终训练模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
     os.makedirs('outputs/ensemble', exist_ok=True)
     for i, model in enumerate(final_ensemble.models):
         torch.save(model.state_dict(), f'outputs/ensemble/model_fold_{i}.pth')

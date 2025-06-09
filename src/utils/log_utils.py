@@ -4,7 +4,7 @@ import time
 from logging.handlers import RotatingFileHandler
 
 LOG_DIR = "logs"
-LOG_NAME = "app.log-" + str(time.time())
+LOG_NAME = "app-" + str(time.time()) + ".log"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 
