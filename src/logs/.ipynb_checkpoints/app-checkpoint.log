@@ -1,0 +1,6 @@
+2025-06-09 11:45:30,723 - root - INFO - 使用设备: cuda
+2025-06-09 11:45:30,724 - root - INFO - 加载数据...
+2025-06-09 11:45:30,752 - root - INFO - 开始超参数优化...
+2025-06-09 11:45:30,756 - root - INFO - 开始新一轮的交叉验证训练, 索引为: 4001692125735695379, 具体参数为: {'learning_rate': 2.9075857007789992e-05, 'weight_decay': 0.07285830564741734, 'dropout_rate': 0.3960120066248135, 'batch_size': 32, 'max_length': 64, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 11:45:30,757 - root - INFO - 索引4001692125735695379 开始训练第 0 折, 共 3 折
+2025-06-09 11:45:30,868 - src.utils.model_loader - INFO - 从本地缓存加载ModelScope模型和tokenizer: google-bert/bert-base-chinese
