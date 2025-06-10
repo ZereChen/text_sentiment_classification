@@ -51,13 +51,13 @@ async def startup_event():
     global model, tokenizer
     try:
         # 检查模型文件是否存在
-        model_path = Path('outputs/best_model.pth')
+        model_path = Path('outputs/model_fold_4.pth')
         if not model_path.exists():
             raise FileNotFoundError(f"模型文件不存在: {model_path}")
 
         # 加载模型
         model = BertClassifier('google-bert/bert-base-chinese')
-        model.load_state_dict(torch.load(model_path))
+        model.load_state_dict(torch.load(model_path, map_location="cpu"))
         model.eval()
 
         # 加载tokenizer

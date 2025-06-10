@@ -90,7 +90,7 @@ class ModelLoader:
                     
                     # 尝试从本地缓存目录加载
                     if os.path.exists(os.path.join(cache_dir, model_name)):
-                        logger.info(f"从本地缓存加载ModelScope模型和tokenizer: {model_name}")
+                        logger.info(f"从本地缓存目录加载ModelScope模型和tokenizer: {model_name}")
                         tokenizer = MSTokenizer.from_pretrained(
                             os.path.join(cache_dir, model_name),
                             **kwargs
@@ -101,7 +101,7 @@ class ModelLoader:
                         )
                     else:
                         # 从远程加载
-                        logger.info(f"从远程加载ModelScope模型和tokenizer: {model_name}")
+                        logger.info(f"从远程服务器加载ModelScope模型和tokenizer: {model_name}")
                         tokenizer = MSTokenizer.from_pretrained(
                             model_name,
                             cache_dir=cache_dir,
@@ -118,7 +118,7 @@ class ModelLoader:
             if not is_modelscope:
                 # 使用transformers加载
                 if os.path.exists(os.path.join(cache_dir, model_name)):
-                    logger.info(f"从本地缓存加载HuggingFace模型和tokenizer: {model_name}")
+                    logger.info(f"从本地缓存目录加载HuggingFace模型和tokenizer: {model_name}")
                     tokenizer = AutoTokenizer.from_pretrained(
                         os.path.join(cache_dir, model_name),
                         **kwargs
@@ -129,7 +129,7 @@ class ModelLoader:
                     )
                 else:
                     # 从远程加载
-                    logger.info(f"从远程加载HuggingFace模型和tokenizer: {model_name}")
+                    logger.info(f"从远程服务器加载HuggingFace模型和tokenizer: {model_name}")
                     tokenizer = AutoTokenizer.from_pretrained(
                         model_name,
                         cache_dir=cache_dir,
