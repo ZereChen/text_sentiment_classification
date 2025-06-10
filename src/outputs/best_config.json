@@ -1,0 +1,12 @@
+{
+    "learning_rate": 1.7355164147473238e-05,
+    "weight_decay": 0.018077687504335818,
+    "dropout_rate": 0.3872116578112105,
+    "batch_size": 64,
+    "max_length": 256,
+    "num_epochs": 10,
+    "n_folds": 5,
+    "max_grad_norm": 1.0,
+    "bert_model_name": "google-bert/bert-base-chinese",
+    "num_classes": 2
+}

@@ -1,0 +1,175 @@
+2025-06-09 18:20:44,128 - src.utils.model_loader - INFO - HuggingFace模型缓存目录: /root/.cache/huggingface/hub
+2025-06-09 18:20:44,129 - src.utils.model_loader - INFO - ModelScope模型缓存目录: /root/.cache/modelscope/hub/models
+2025-06-09 18:20:44,141 - src.utils.model_loader - INFO - 使用设备: cuda
+2025-06-09 18:20:44,141 - src.utils.model_loader - INFO - 加载数据...
+2025-06-09 18:20:44,169 - src.utils.model_loader - INFO - 开始超参数优化...
+2025-06-09 18:20:44,171 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -4569875556902950727, 具体参数为: {'learning_rate': 4.0064007329930385e-05, 'weight_decay': 0.08602384087531215, 'dropout_rate': 0.3427067306424154, 'batch_size': 8, 'max_length': 128, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 18:20:44,173 - src.utils.model_loader - INFO - 索引-4569875556902950727 开始训练第 0 折, 共 3 折
+2025-06-09 18:20:44,742 - src.utils.model_loader - INFO - 从远程加载ModelScope模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:25:05,758 - src.utils.model_loader - INFO - 索引-4569875556902950727 完成训练第 0 折，F1分数: 0.8951
+2025-06-09 18:25:05,762 - src.utils.model_loader - INFO - 索引-4569875556902950727 开始训练第 1 折, 共 3 折
+2025-06-09 18:25:05,766 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:28:57,605 - src.utils.model_loader - INFO - 索引-4569875556902950727 完成训练第 1 折，F1分数: 0.9054
+2025-06-09 18:28:57,609 - src.utils.model_loader - INFO - 索引-4569875556902950727 开始训练第 2 折, 共 3 折
+2025-06-09 18:28:57,612 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:32:50,314 - src.utils.model_loader - INFO - 索引-4569875556902950727 完成训练第 2 折，F1分数: 0.9274
+2025-06-09 18:32:50,317 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -4569875556902950727, 平均F1分数: 0.9093, 最佳F1分数: 0.9274, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 18:32:50,321 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.8951
+2025-06-09 18:32:50,324 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9054
+2025-06-09 18:32:50,327 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9274
+2025-06-09 18:32:50,332 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -3876973740920031040, 具体参数为: {'learning_rate': 1.8924267550665888e-05, 'weight_decay': 0.09832173619005946, 'dropout_rate': 0.20456760236486857, 'batch_size': 32, 'max_length': 64, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 18:32:50,335 - src.utils.model_loader - INFO - 索引-3876973740920031040 开始训练第 0 折, 共 3 折
+2025-06-09 18:32:50,338 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:34:30,739 - src.utils.model_loader - INFO - 索引-3876973740920031040 完成训练第 0 折，F1分数: 0.9401
+2025-06-09 18:34:30,743 - src.utils.model_loader - INFO - 索引-3876973740920031040 开始训练第 1 折, 共 3 折
+2025-06-09 18:34:30,746 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:36:11,499 - src.utils.model_loader - INFO - 索引-3876973740920031040 完成训练第 1 折，F1分数: 0.9408
+2025-06-09 18:36:11,503 - src.utils.model_loader - INFO - 索引-3876973740920031040 开始训练第 2 折, 共 3 折
+2025-06-09 18:36:11,507 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:37:52,236 - src.utils.model_loader - INFO - 索引-3876973740920031040 完成训练第 2 折，F1分数: 0.9606
+2025-06-09 18:37:52,240 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -3876973740920031040, 平均F1分数: 0.9472, 最佳F1分数: 0.9606, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 18:37:52,244 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9401
+2025-06-09 18:37:52,246 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9408
+2025-06-09 18:37:52,248 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9606
+2025-06-09 18:37:52,252 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: 2794290337322508027, 具体参数为: {'learning_rate': 3.9409132573981126e-05, 'weight_decay': 0.04872804893207731, 'dropout_rate': 0.19111106064226493, 'batch_size': 32, 'max_length': 64, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 18:37:52,256 - src.utils.model_loader - INFO - 索引2794290337322508027 开始训练第 0 折, 共 3 折
+2025-06-09 18:37:52,259 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:39:32,682 - src.utils.model_loader - INFO - 索引2794290337322508027 完成训练第 0 折，F1分数: 0.9604
+2025-06-09 18:39:32,686 - src.utils.model_loader - INFO - 索引2794290337322508027 开始训练第 1 折, 共 3 折
+2025-06-09 18:39:32,689 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:41:13,185 - src.utils.model_loader - INFO - 索引2794290337322508027 完成训练第 1 折，F1分数: 0.9454
+2025-06-09 18:41:13,190 - src.utils.model_loader - INFO - 索引2794290337322508027 开始训练第 2 折, 共 3 折
+2025-06-09 18:41:13,193 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:42:53,693 - src.utils.model_loader - INFO - 索引2794290337322508027 完成训练第 2 折，F1分数: 0.9545
+2025-06-09 18:42:53,696 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: 2794290337322508027, 平均F1分数: 0.9534, 最佳F1分数: 0.9604, 最佳模型下标(折数): 0, 以下是所有模型信息:
+2025-06-09 18:42:53,700 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9604
+2025-06-09 18:42:53,703 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9454
+2025-06-09 18:42:53,706 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9545
+2025-06-09 18:42:53,711 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -8135889865944986546, 具体参数为: {'learning_rate': 1.889266015889254e-05, 'weight_decay': 0.037632150504045114, 'dropout_rate': 0.12480738563100952, 'batch_size': 32, 'max_length': 64, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 18:42:53,714 - src.utils.model_loader - INFO - 索引-8135889865944986546 开始训练第 0 折, 共 3 折
+2025-06-09 18:42:53,717 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:44:34,114 - src.utils.model_loader - INFO - 索引-8135889865944986546 完成训练第 0 折，F1分数: 0.9654
+2025-06-09 18:44:34,118 - src.utils.model_loader - INFO - 索引-8135889865944986546 开始训练第 1 折, 共 3 折
+2025-06-09 18:44:34,121 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:46:14,770 - src.utils.model_loader - INFO - 索引-8135889865944986546 完成训练第 1 折，F1分数: 0.9653
+2025-06-09 18:46:14,774 - src.utils.model_loader - INFO - 索引-8135889865944986546 开始训练第 2 折, 共 3 折
+2025-06-09 18:46:14,777 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:47:55,374 - src.utils.model_loader - INFO - 索引-8135889865944986546 完成训练第 2 折，F1分数: 0.9764
+2025-06-09 18:47:55,378 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -8135889865944986546, 平均F1分数: 0.9691, 最佳F1分数: 0.9764, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 18:47:55,381 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9654
+2025-06-09 18:47:55,383 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9653
+2025-06-09 18:47:55,385 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9764
+2025-06-09 18:47:55,390 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: 7090421445662362079, 具体参数为: {'learning_rate': 4.867005612761366e-05, 'weight_decay': 0.041043300827098096, 'dropout_rate': 0.43911047136708115, 'batch_size': 64, 'max_length': 128, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 18:47:55,394 - src.utils.model_loader - INFO - 索引7090421445662362079 开始训练第 0 折, 共 3 折
+2025-06-09 18:47:55,397 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:50:48,268 - src.utils.model_loader - INFO - 索引7090421445662362079 完成训练第 0 折，F1分数: 0.9604
+2025-06-09 18:50:48,272 - src.utils.model_loader - INFO - 索引7090421445662362079 开始训练第 1 折, 共 3 折
+2025-06-09 18:50:48,275 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:53:40,938 - src.utils.model_loader - INFO - 索引7090421445662362079 完成训练第 1 折，F1分数: 0.9443
+2025-06-09 18:53:40,942 - src.utils.model_loader - INFO - 索引7090421445662362079 开始训练第 2 折, 共 3 折
+2025-06-09 18:53:40,945 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 18:56:33,855 - src.utils.model_loader - INFO - 索引7090421445662362079 完成训练第 2 折，F1分数: 0.9460
+2025-06-09 18:56:33,858 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: 7090421445662362079, 平均F1分数: 0.9502, 最佳F1分数: 0.9604, 最佳模型下标(折数): 0, 以下是所有模型信息:
+2025-06-09 18:56:33,862 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9604
+2025-06-09 18:56:33,865 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9443
+2025-06-09 18:56:33,868 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9460
+2025-06-09 18:56:33,873 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -1864452882464440390, 具体参数为: {'learning_rate': 1.691313519605406e-05, 'weight_decay': 0.08060477719155144, 'dropout_rate': 0.35742789987482804, 'batch_size': 8, 'max_length': 128, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 18:56:33,877 - src.utils.model_loader - INFO - 索引-1864452882464440390 开始训练第 0 折, 共 3 折
+2025-06-09 18:56:33,880 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:00:26,383 - src.utils.model_loader - INFO - 索引-1864452882464440390 完成训练第 0 折，F1分数: 0.9257
+2025-06-09 19:00:26,388 - src.utils.model_loader - INFO - 索引-1864452882464440390 开始训练第 1 折, 共 3 折
+2025-06-09 19:00:26,392 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:04:19,027 - src.utils.model_loader - INFO - 索引-1864452882464440390 完成训练第 1 折，F1分数: 0.9431
+2025-06-09 19:04:19,031 - src.utils.model_loader - INFO - 索引-1864452882464440390 开始训练第 2 折, 共 3 折
+2025-06-09 19:04:19,034 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:08:13,009 - src.utils.model_loader - INFO - 索引-1864452882464440390 完成训练第 2 折，F1分数: 0.9615
+2025-06-09 19:08:13,013 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -1864452882464440390, 平均F1分数: 0.9434, 最佳F1分数: 0.9615, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 19:08:13,015 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9257
+2025-06-09 19:08:13,017 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9431
+2025-06-09 19:08:13,019 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9615
+2025-06-09 19:08:13,023 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -1444689176357651552, 具体参数为: {'learning_rate': 1.1034931822285233e-05, 'weight_decay': 0.019806623319043815, 'dropout_rate': 0.3031449700839599, 'batch_size': 64, 'max_length': 128, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 19:08:13,027 - src.utils.model_loader - INFO - 索引-1444689176357651552 开始训练第 0 折, 共 3 折
+2025-06-09 19:08:13,030 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:11:05,835 - src.utils.model_loader - INFO - 索引-1444689176357651552 完成训练第 0 折，F1分数: 0.9760
+2025-06-09 19:11:05,839 - src.utils.model_loader - INFO - 索引-1444689176357651552 开始训练第 1 折, 共 3 折
+2025-06-09 19:11:05,843 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:13:58,934 - src.utils.model_loader - INFO - 索引-1444689176357651552 完成训练第 1 折，F1分数: 0.9742
+2025-06-09 19:13:58,939 - src.utils.model_loader - INFO - 索引-1444689176357651552 开始训练第 2 折, 共 3 折
+2025-06-09 19:13:58,944 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:16:51,588 - src.utils.model_loader - INFO - 索引-1444689176357651552 完成训练第 2 折，F1分数: 0.9797
+2025-06-09 19:16:51,591 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -1444689176357651552, 平均F1分数: 0.9766, 最佳F1分数: 0.9797, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 19:16:51,594 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9760
+2025-06-09 19:16:51,597 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9742
+2025-06-09 19:16:51,601 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9797
+2025-06-09 19:16:51,605 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -5684978252772938391, 具体参数为: {'learning_rate': 2.368522461491477e-05, 'weight_decay': 0.08792555023913001, 'dropout_rate': 0.20087910206744072, 'batch_size': 64, 'max_length': 64, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 19:16:51,609 - src.utils.model_loader - INFO - 索引-5684978252772938391 开始训练第 0 折, 共 3 折
+2025-06-09 19:16:51,612 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:18:24,392 - src.utils.model_loader - INFO - 索引-5684978252772938391 完成训练第 0 折，F1分数: 0.9802
+2025-06-09 19:18:24,396 - src.utils.model_loader - INFO - 索引-5684978252772938391 开始训练第 1 折, 共 3 折
+2025-06-09 19:18:24,399 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:19:57,191 - src.utils.model_loader - INFO - 索引-5684978252772938391 完成训练第 1 折，F1分数: 0.9774
+2025-06-09 19:19:57,196 - src.utils.model_loader - INFO - 索引-5684978252772938391 开始训练第 2 折, 共 3 折
+2025-06-09 19:19:57,199 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:21:30,592 - src.utils.model_loader - INFO - 索引-5684978252772938391 完成训练第 2 折，F1分数: 0.9799
+2025-06-09 19:21:30,596 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -5684978252772938391, 平均F1分数: 0.9792, 最佳F1分数: 0.9802, 最佳模型下标(折数): 0, 以下是所有模型信息:
+2025-06-09 19:21:30,599 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9802
+2025-06-09 19:21:30,601 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9774
+2025-06-09 19:21:30,604 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9799
+2025-06-09 19:21:30,609 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: -7550183610262853186, 具体参数为: {'learning_rate': 2.328922693668559e-05, 'weight_decay': 0.09852693500728954, 'dropout_rate': 0.30021654425797395, 'batch_size': 32, 'max_length': 64, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 19:21:30,613 - src.utils.model_loader - INFO - 索引-7550183610262853186 开始训练第 0 折, 共 3 折
+2025-06-09 19:21:30,616 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:23:12,529 - src.utils.model_loader - INFO - 索引-7550183610262853186 完成训练第 0 折，F1分数: 0.9780
+2025-06-09 19:23:12,533 - src.utils.model_loader - INFO - 索引-7550183610262853186 开始训练第 1 折, 共 3 折
+2025-06-09 19:23:12,536 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:24:54,522 - src.utils.model_loader - INFO - 索引-7550183610262853186 完成训练第 1 折，F1分数: 0.9739
+2025-06-09 19:24:54,527 - src.utils.model_loader - INFO - 索引-7550183610262853186 开始训练第 2 折, 共 3 折
+2025-06-09 19:24:54,530 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:26:36,264 - src.utils.model_loader - INFO - 索引-7550183610262853186 完成训练第 2 折，F1分数: 0.9787
+2025-06-09 19:26:36,268 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: -7550183610262853186, 平均F1分数: 0.9769, 最佳F1分数: 0.9787, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 19:26:36,271 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9780
+2025-06-09 19:26:36,278 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9739
+2025-06-09 19:26:36,281 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9787
+2025-06-09 19:26:36,285 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: 7393525683175324992, 具体参数为: {'learning_rate': 1.7355164147473238e-05, 'weight_decay': 0.018077687504335818, 'dropout_rate': 0.3872116578112105, 'batch_size': 64, 'max_length': 256, 'num_epochs': 3, 'n_folds': 3, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 19:26:36,289 - src.utils.model_loader - INFO - 索引7393525683175324992 开始训练第 0 折, 共 3 折
+2025-06-09 19:26:36,292 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:32:11,222 - src.utils.model_loader - INFO - 索引7393525683175324992 完成训练第 0 折，F1分数: 0.9803
+2025-06-09 19:32:11,226 - src.utils.model_loader - INFO - 索引7393525683175324992 开始训练第 1 折, 共 3 折
+2025-06-09 19:32:11,229 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:37:45,994 - src.utils.model_loader - INFO - 索引7393525683175324992 完成训练第 1 折，F1分数: 0.9790
+2025-06-09 19:37:45,999 - src.utils.model_loader - INFO - 索引7393525683175324992 开始训练第 2 折, 共 3 折
+2025-06-09 19:37:46,002 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 19:43:20,748 - src.utils.model_loader - INFO - 索引7393525683175324992 完成训练第 2 折，F1分数: 0.9825
+2025-06-09 19:43:20,752 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: 7393525683175324992, 平均F1分数: 0.9806, 最佳F1分数: 0.9825, 最佳模型下标(折数): 2, 以下是所有模型信息:
+2025-06-09 19:43:20,754 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9803
+2025-06-09 19:43:20,757 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9790
+2025-06-09 19:43:20,760 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9825
+2025-06-09 19:43:20,764 - src.utils.model_loader - INFO - 获取最佳超参数成功，具体数值为:
+2025-06-09 19:43:20,767 - src.utils.model_loader - INFO - 	 learning_rate: 1.7355164147473238e-05
+2025-06-09 19:43:20,770 - src.utils.model_loader - INFO - 	 weight_decay: 0.018077687504335818
+2025-06-09 19:43:20,773 - src.utils.model_loader - INFO - 	 dropout_rate: 0.3872116578112105
+2025-06-09 19:43:20,776 - src.utils.model_loader - INFO - 	 batch_size: 64
+2025-06-09 19:43:20,779 - src.utils.model_loader - INFO - 	 max_length: 256
+2025-06-09 19:43:20,789 - src.utils.model_loader - INFO - 使用最佳超参数进行最终训练，best_config具体数值为: {'learning_rate': 1.7355164147473238e-05, 'weight_decay': 0.018077687504335818, 'dropout_rate': 0.3872116578112105, 'batch_size': 64, 'max_length': 256, 'num_epochs': 10, 'n_folds': 5, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 19:43:20,792 - src.utils.model_loader - INFO - 开始新一轮的K折交叉验证训练, 索引为: 5170792372852902378, 具体参数为: {'learning_rate': 1.7355164147473238e-05, 'weight_decay': 0.018077687504335818, 'dropout_rate': 0.3872116578112105, 'batch_size': 64, 'max_length': 256, 'num_epochs': 10, 'n_folds': 5, 'max_grad_norm': 1.0, 'bert_model_name': 'google-bert/bert-base-chinese', 'num_classes': 2}
+2025-06-09 19:43:20,796 - src.utils.model_loader - INFO - 索引5170792372852902378 开始训练第 0 折, 共 5 折
+2025-06-09 19:43:20,799 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 20:04:05,330 - src.utils.model_loader - INFO - 索引5170792372852902378 完成训练第 0 折，F1分数: 0.9829
+2025-06-09 20:04:05,335 - src.utils.model_loader - INFO - 索引5170792372852902378 开始训练第 1 折, 共 5 折
+2025-06-09 20:04:05,339 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 20:24:49,808 - src.utils.model_loader - INFO - 索引5170792372852902378 完成训练第 1 折，F1分数: 0.9909
+2025-06-09 20:24:49,811 - src.utils.model_loader - INFO - 索引5170792372852902378 开始训练第 2 折, 共 5 折
+2025-06-09 20:24:49,815 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 20:45:33,672 - src.utils.model_loader - INFO - 索引5170792372852902378 完成训练第 2 折，F1分数: 0.9917
+2025-06-09 20:45:33,675 - src.utils.model_loader - INFO - 索引5170792372852902378 开始训练第 3 折, 共 5 折
+2025-06-09 20:45:33,678 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 21:06:16,493 - src.utils.model_loader - INFO - 索引5170792372852902378 完成训练第 3 折，F1分数: 0.9950
+2025-06-09 21:06:16,496 - src.utils.model_loader - INFO - 索引5170792372852902378 开始训练第 4 折, 共 5 折
+2025-06-09 21:06:16,500 - src.utils.model_loader - INFO - 从内存缓存加载模型和tokenizer: google-bert/bert-base-chinese
+2025-06-09 21:26:58,954 - src.utils.model_loader - INFO - 索引5170792372852902378 完成训练第 4 折，F1分数: 0.9958
+2025-06-09 21:26:58,958 - src.utils.model_loader - INFO - 此轮的K折交叉验证训练完成, 索引为: 5170792372852902378, 平均F1分数: 0.9913, 最佳F1分数: 0.9958, 最佳模型下标(折数): 4, 以下是所有模型信息:
+2025-06-09 21:26:58,962 - src.utils.model_loader - INFO - 	 模型下标(折数) 0: F1分数 = 0.9829
+2025-06-09 21:26:58,965 - src.utils.model_loader - INFO - 	 模型下标(折数) 1: F1分数 = 0.9909
+2025-06-09 21:26:58,968 - src.utils.model_loader - INFO - 	 模型下标(折数) 2: F1分数 = 0.9917
+2025-06-09 21:26:58,970 - src.utils.model_loader - INFO - 	 模型下标(折数) 3: F1分数 = 0.9950
+2025-06-09 21:26:58,975 - src.utils.model_loader - INFO - 	 模型下标(折数) 4: F1分数 = 0.9958
+2025-06-09 21:27:11,190 - src.utils.model_loader - INFO - 模型保存成功，训练完成！
