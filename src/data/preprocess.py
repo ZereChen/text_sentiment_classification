@@ -1,7 +1,8 @@
+import nlpaug.augmenter.word as naw
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
-from transformers import BertTokenizer
+
 
 class TextDataset(Dataset):
     def __init__(self, texts, labels, tokenizer, max_length=128):
@@ -40,11 +41,16 @@ class TextDataset(Dataset):
         }
 
     def augment_text(self, text):
-        # 实现数据增强方法
+        # 实现数据增强，包括
         # 1. 同义词替换
-        # 2. 随机删除
-        # 3. 随机插入
-        # 4. 回译
+        # 2. 随机插入
+        # 3. 随机交换
+        # 4. 随机删除
+        # 5. 回译
+        # import nltk
+        # nltk.download('wordnet')
+        # aug = naw.SynonymAug(aug_src='wordnet')
+        # augmented_text = aug.augment(text)
         return text
 
 def load_data(file_path):
