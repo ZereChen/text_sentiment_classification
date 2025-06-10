@@ -19,6 +19,7 @@ from tqdm import tqdm
 from transformers import (
     get_linear_schedule_with_warmup,
 )
+import torch.nn as nn
 
 from src.data.preprocess import TextDataset, load_data
 from src.utils.log_utils import LoggerManager
@@ -38,7 +39,13 @@ class LoRATrainer:
         logger.info(f"使用设备: {self.device}")
 
         # 初始化模型和tokenizer
-        bert, tokenizer = ModelLoader.load_pretrained(model_name = config['model_name'], is_modelscope=True)
+        bert, tokenizer = ModelLoader.load_pretrained(
+            model_name=config['model_name'],
+            is_modelscope=True,
+            num_labels=config['num_classes'],
+            id2label={0: "负面", 1: "正面"},
+            label2id={"负面": 0, "正面": 1}
+        )
         self.model = bert
         self.tokenizer = tokenizer
 
@@ -118,11 +125,12 @@ class LoRATrainer:
                 # 前向传播
                 outputs = self.model(
                     input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    labels=labels
+                    attention_mask=attention_mask
                 )
-
-                loss = outputs.loss
+                
+                criterion = nn.CrossEntropyLoss()
+                loss = criterion(outputs.logits, labels)
+                
                 total_loss += loss.item()
                 train_steps += 1
 
