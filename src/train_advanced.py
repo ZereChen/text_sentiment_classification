@@ -142,7 +142,7 @@ def cross_validation(
 
     logger.info(f"开始新一轮的K折交叉验证训练, 索引为: {unique_value}, 具体参数为: {config}")
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
-        logger.info(f"索引{unique_value} 开始训练第 {fold} 折, 共 {config['n_folds']} 折")
+        logger.info(f"索引 {unique_value} 开始训练第 {fold} 折, 共 {config['n_folds']} 折")
 
         # 初始化模型和tokenizer
         model = BertClassifier(
@@ -169,7 +169,7 @@ def cross_validation(
 
         # 训练模型
         model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
-        logger.info(f"索引{unique_value} 完成训练第 {fold} 折，F1分数: {val_f1:.4f}")
+        logger.info(f"索引 {unique_value} 完成训练第 {fold} 折，F1分数: {val_f1:.4f}")
 
         # 将模型和验证F1分数添加到集成模型中
         ensemble.add_model(model, val_f1)
