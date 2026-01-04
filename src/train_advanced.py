@@ -132,6 +132,7 @@ def train_fold(
         # 训练阶段
         model.train()
         total_loss = 0
+        batch_count = 0  # Track valid batches
         all_preds = []  # 预测结果
         all_labels = [] # 真实标签
 
@@ -148,15 +149,21 @@ def train_fold(
             torch.nn.utils.clip_grad_norm_(model.parameters(), config['max_grad_norm'])
             optimizer.step()
 
-            total_loss += loss.item()
+            # Safely access loss item, handling potential issues
+            try:
+                total_loss += loss.item()
+                batch_count += 1  # Only count valid batches
+            except RuntimeError:
+                # Skip this batch if loss is invalid
+                continue
 
             # 收集预测结果阶段
             _, predicted = torch.max(outputs.data, 1)  # 获取预测结果张量
             all_preds.extend(predicted.cpu().numpy())  # 将预测结果添加到列表中
             all_labels.extend(labels.cpu().numpy())    # 将真实标签添加到列表中
 
-        # 计算在这个epoch中的平均损失和准确率
-        avg_loss = total_loss / len(train_loader)  # 计算在这个epoch中，所有batch的平均损失
+        # Calculate average loss only if we have valid batches
+        avg_loss = total_loss / batch_count if batch_count > 0 else float('inf')
         train_accuracy = 100 * np.mean(np.array(all_preds) == np.array(all_labels))  # 计算在这个epoch中，所有case的准确率
         train_losses.append(avg_loss)
         train_accs.append(train_accuracy)
@@ -166,6 +173,8 @@ def train_fold(
         val_loss = 0
         val_preds = []
         val_labels = []
+        valid_batch_count = 0  # Track valid batches
+
         with torch.no_grad():
             for batch in val_loader:
                 input_ids = batch['input_ids'].to(device)
@@ -175,14 +184,20 @@ def train_fold(
                 outputs = model(input_ids, attention_mask)
                 loss = criterion(outputs, labels)
 
-                val_loss += loss.item()
+                # Safely access loss item, handling potential issues
+                try:
+                    val_loss += loss.item()
+                    valid_batch_count += 1  # Only count valid batches
+                except RuntimeError:
+                    # Skip this batch if loss is invalid
+                    continue
 
                 _, predicted = torch.max(outputs.data, 1)
                 val_preds.extend(predicted.cpu().numpy())
                 val_labels.extend(labels.cpu().numpy())
 
-        # 计算验证损失和准确率
-        avg_val_loss = val_loss / len(val_loader)
+        # Calculate average validation loss only if we have valid batches
+        avg_val_loss = val_loss / valid_batch_count if valid_batch_count > 0 else float('inf')
         val_accuracy = 100 * np.mean(np.array(val_preds) == np.array(val_labels))
         val_losses.append(avg_val_loss)
         val_accs.append(val_accuracy)
