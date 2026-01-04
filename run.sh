@@ -11,4 +11,4 @@ export PYTHONPATH=$root:$PYTHONPATH
 echo "当前目录是: $root"
 
 cd src || { echo "无法进入 src 目录"; exit 1; }
-$root/.venv/bin/python $root/src/train_advanced.py
+nohup $root/.venv/bin/python $root/src/train_advanced.py &
