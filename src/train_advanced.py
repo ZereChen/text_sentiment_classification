@@ -70,9 +70,12 @@ def train_fold(
         train_loader: DataLoader,
         val_loader: DataLoader,
         device: torch.device,
-        config: Dict[str, Any]
+        config: Dict[str, Any],
 ) -> Tuple[BertClassifier, float]:
-    """训练单个折的模型"""
+    """
+    单个折的模型训练
+    """
+    # 梯度下降优化器
     optimizer = AdamW(
         model.parameters(),
         lr=config['learning_rate'],
@@ -134,13 +137,18 @@ def cross_validation(
         device: torch.device,
         config: Dict[str, Any]
 ) -> ModelEnsemble:
-    """K折交叉验证训练"""
+    """
+    K折交叉验证训练
+    """
     kfold = KFold(n_splits=config['n_folds'], shuffle=True, random_state=42)
     ensemble = ModelEnsemble()  # 创建空的集成模型
     # 生成一个唯一值
     unique_value = str(hash(tuple(config.items())))
 
     logger.info(f"开始新一轮的K折交叉验证训练, 索引为: {unique_value}, 具体参数为: {config}")
+    # 将texts拆分为训练集(数量为1-1/折数) 和验证集(数量为1/折数)
+    # train_idx是训练集的索引，val_idx是验证集的索引
+    # 每一条数据在整个训练中：恰好出现在 1 次验证集中; 其余次数均出现在训练集中
     for fold, (train_idx, val_idx) in enumerate(kfold.split(texts)):
         logger.info(f"索引 {unique_value} 开始训练第 {fold} 折, 共 {config['n_folds']} 折")
 
@@ -191,14 +199,17 @@ def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: 
         'dropout_rate': trial.suggest_float('dropout_rate', 0.1, 0.5),
         'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32, 64, 128]),
         'max_length': trial.suggest_categorical('max_length', [64, 128, 256]),
-        'num_epochs': 3,  # 为了快速搜索，减少训练轮数
-        'n_folds': 3,  # 为了快速搜索，减少折数, 每一折会进行 num_epochs 轮训练
+        # 为了快速搜索，减少训练轮数
+        'num_epochs': 3,
+        # 为了快速搜索，减少折数, 每一折会进行 num_epochs 轮训练
+        'n_folds': 3,
         'max_grad_norm': 1.0,
         'bert_model_name': 'google-bert/bert-base-chinese',
+        # 二分类任务
         'num_classes': 2
     }
 
-    ensemble = cross_validation(texts, labels, device, config)
+    ensemble = cross_validation(texts, labels, device, config, True)
     return ensemble.best_val_f1
 
 
@@ -216,9 +227,10 @@ def main():
     if not os.path.exists('outputs/best_config.json'):
         # 超参数优化
         logger.info("开始超参数优化...")
-        study = optuna.create_study(direction='maximize')  # 目标函数最值化，可以用["minimize", "maximize"]
-        study.optimize(lambda trial: objective(trial, texts, labels, device),
-                       n_trials=10)  # 超参数尝试多少组不同的超参数组合
+        # 目标函数最值化，可以用["minimize", "maximize"]
+        study = optuna.create_study(direction='maximize')
+        # 尝试n_trials次不同的超参数组合
+        study.optimize(lambda trial: objective(trial, texts, labels, device), n_trials=10)
         logger.info("获取最佳超参数成功，具体数值为:")
         for key, value in study.best_params.items():
             logger.info(f"\t {key}: {value}")
