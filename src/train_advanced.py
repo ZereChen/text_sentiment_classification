@@ -189,7 +189,7 @@ def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: 
         'learning_rate': trial.suggest_float('learning_rate', 1e-5, 5e-5, log=True),
         'weight_decay': trial.suggest_float('weight_decay', 0.01, 0.1),
         'dropout_rate': trial.suggest_float('dropout_rate', 0.1, 0.5),
-        'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32, 64]),
+        'batch_size': trial.suggest_categorical('batch_size', [8, 16, 32, 64, 128]),
         'max_length': trial.suggest_categorical('max_length', [64, 128, 256]),
         'num_epochs': 3,  # 为了快速搜索，减少训练轮数
         'n_folds': 3,  # 为了快速搜索，减少折数, 每一折会进行 num_epochs 轮训练
