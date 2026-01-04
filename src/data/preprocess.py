@@ -54,5 +54,11 @@ class TextDataset(Dataset):
         return text
 
 def load_data(file_path):
+    """
+    返回
+    标签和评价文本
+    :param file_path:
+    :return:
+    """
     df = pd.read_csv(file_path)
     return df['review'].values, df['label'].values

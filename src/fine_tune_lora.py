@@ -43,7 +43,9 @@ class LoRATrainer:
             model_name=config['model_name'],
             is_modelscope=True,
             num_labels=config['num_classes'],
+            # 数字 ID → 字符串标签（用于模型输出后的解读
             id2label={0: "负面", 1: "正面"},
+            # 字符串标签 → 数字 ID（用于输入模型前的预处理）
             label2id={"负面": 0, "正面": 1}
         )
         self.model = bert
@@ -59,8 +61,9 @@ class LoRATrainer:
             target_modules=["query", "key", "value"]  # 针对BERT的注意力层
         )
 
-        # 准备模型
+        # 得到LoRA模型
         self.model = prepare_model_for_kbit_training(self.model)
+        # 将 LoRA 注入模型
         self.model = get_peft_model(self.model, peft_config)
         self.model.to(self.device)
 
@@ -69,7 +72,12 @@ class LoRATrainer:
         logger.info(f"可训练参数数量: {trainable_params:,}")
 
     def prepare_data(self, texts, labels):
-        # 创建数据集
+        """
+        创建数据集，按训练集和验证集8:2比例分
+        :param texts:
+        :param labels:
+        :return:
+        """
         dataset = TextDataset(texts, labels, self.tokenizer, self.config['max_length'])
         train_size = int(0.8 * len(dataset))
         val_size = len(dataset) - train_size
@@ -98,9 +106,9 @@ class LoRATrainer:
             lr=self.config['learning_rate'],
             weight_decay=self.config['weight_decay']
         )
-
-        # 学习率调度器
+        # 总步骤数
         total_steps = len(train_loader) * self.config['num_epochs']
+        # 学习率预热，num_warmup_steps表示前 int(total_steps * 0.1) 步为预热阶段。
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
             num_warmup_steps=int(total_steps * 0.1),
@@ -130,17 +138,21 @@ class LoRATrainer:
                 
                 criterion = nn.CrossEntropyLoss()
                 loss = criterion(outputs.logits, labels)
-                
+                # 累计整个 epoch 的总损失
                 total_loss += loss.item()
                 train_steps += 1
 
                 # 反向传播
                 loss.backward()
+                # 梯度裁剪防止梯度爆炸，计算所有参数梯度的 L2 范数
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config['max_grad_norm'])
+                # 当前梯度更新模型参数（反向传播）
                 optimizer.step()
+                # 更新学习率
                 scheduler.step()
+                # 清空梯度缓冲区（如果不清零，下一个 batch 的梯度会加到上一个 batch 的梯度上）
                 optimizer.zero_grad()
-
+            # 计算平均 loss
             avg_train_loss = total_loss / train_steps
             logger.info(f"第 {epoch + 1} 轮平均训练损失: {avg_train_loss:.4f}")
 
@@ -156,7 +168,9 @@ class LoRATrainer:
 
     def evaluate(self, val_loader):
         self.model.eval()
+        # 存储所有预测结果
         all_preds = []
+        # 存储所有真实标签
         all_labels = []
 
         with torch.no_grad():
@@ -164,12 +178,12 @@ class LoRATrainer:
                 input_ids = batch['input_ids'].to(self.device)
                 attention_mask = batch['attention_mask'].to(self.device)
                 labels = batch['labels']
-
+                # 前向传播进行预测
                 outputs = self.model(
                     input_ids=input_ids,
                     attention_mask=attention_mask
                 )
-
+                # 取每个样本 logits 中最大值的索引 作为预测结果
                 preds = torch.argmax(outputs.logits, dim=1).cpu()
                 all_preds.extend(preds.numpy())
                 all_labels.extend(labels.numpy())

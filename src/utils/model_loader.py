@@ -60,7 +60,9 @@ class ModelLoader:
             **kwargs
     ) -> Tuple[Any, Any]:
         """
-        加载预训练模型和tokenizer，支持HuggingFace和ModelScope模型
+        加载预训练模型和tokenizer
+        若本地目录有模型，则从本地缓存目录加载
+        若本地目录没有模型，则从远程加载，远程加载支持HuggingFace和ModelScope模型
         
         Args:
             model_name: 模型名称或路径
