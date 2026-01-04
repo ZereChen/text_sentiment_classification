@@ -2,6 +2,8 @@ import json
 import os
 from typing import List, Dict, Any, Tuple
 
+import matplotlib.pyplot as plt
+import numpy as np
 import optuna
 import torch
 from sklearn.metrics import f1_score
@@ -65,13 +67,47 @@ class ModelEnsemble:
         ]
 
 
+def plot_curves(train_losses, val_losses, train_accs, val_accs):
+    """
+    绘制训练和验证的损失曲线和准确率曲线
+
+    参数:
+    train_losses: 训练损失列表
+    val_losses: 验证损失列表
+    train_accs: 训练准确率列表
+    val_accs: 验证准确率列表
+    """
+    # 绘制损失曲线
+    plt.figure(figsize=(10, 5))
+    epochs = np.arange(1, len(train_losses) + 1)  # 使用实际训练的epoch数
+    plt.plot(epochs, train_losses, 'b-', label='Training Loss')
+    plt.plot(epochs, val_losses, 'r-', label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('outputs/loss_curve_advanced.png')
+
+    # 绘制准确率曲线
+    plt.figure(figsize=(10, 5))
+    plt.plot(epochs, train_accs, 'b-', label='Training Accuracy')
+    plt.plot(epochs, val_accs, 'r-', label='Validation Accuracy')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy (%)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('outputs/accuracy_curve_advanced.png')
+
+
 def train_fold(
         model: BertClassifier,
         train_loader: DataLoader,
         val_loader: DataLoader,
         device: torch.device,
         config: Dict[str, Any],
-) -> Tuple[BertClassifier, float]:
+) -> Tuple[BertClassifier, float, List[float], List[float], List[float], List[float]]:
     """
     单个折的模型训练
     """
@@ -86,10 +122,19 @@ def train_fold(
     best_val_f1 = 0
     best_model_state = None
 
+    # 记录训练过程
+    train_losses = []  # 每一个元素 记录一轮epoch的 batch平均loss
+    train_accs = []    # 每一个元素 记录一轮epoch的 所有case的准确率
+    val_losses = []    # 每一个元素 记录一轮epoch的 batch平均loss
+    val_accs = []      # 每一个元素 记录一轮epoch的 所有case的准确率
+
     for epoch in range(config['num_epochs']):
         # 训练阶段
         model.train()
         total_loss = 0
+        all_preds = []  # 预测结果
+        all_labels = [] # 真实标签
+
         for batch in tqdm(train_loader, desc=f'Epoch {epoch + 1}/{config["num_epochs"]}'):
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
@@ -105,8 +150,20 @@ def train_fold(
 
             total_loss += loss.item()
 
+            # 收集预测结果阶段
+            _, predicted = torch.max(outputs.data, 1)  # 获取预测结果张量
+            all_preds.extend(predicted.cpu().numpy())  # 将预测结果添加到列表中
+            all_labels.extend(labels.cpu().numpy())    # 将真实标签添加到列表中
+
+        # 计算在这个epoch中的平均损失和准确率
+        avg_loss = total_loss / len(train_loader)  # 计算在这个epoch中，所有batch的平均损失
+        train_accuracy = 100 * np.mean(np.array(all_preds) == np.array(all_labels))  # 计算在这个epoch中，所有case的准确率
+        train_losses.append(avg_loss)
+        train_accs.append(train_accuracy)
+
         # 验证阶段
         model.eval()
+        val_loss = 0
         val_preds = []
         val_labels = []
         with torch.no_grad():
@@ -116,9 +173,19 @@ def train_fold(
                 labels = batch['labels'].to(device)
 
                 outputs = model(input_ids, attention_mask)
+                loss = criterion(outputs, labels)
+
+                val_loss += loss.item()
+
                 _, predicted = torch.max(outputs.data, 1)
                 val_preds.extend(predicted.cpu().numpy())
                 val_labels.extend(labels.cpu().numpy())
+
+        # 计算验证损失和准确率
+        avg_val_loss = val_loss / len(val_loader)
+        val_accuracy = 100 * np.mean(np.array(val_preds) == np.array(val_labels))
+        val_losses.append(avg_val_loss)
+        val_accs.append(val_accuracy)
 
         val_f1 = f1_score(val_labels, val_preds, average='weighted')
         if val_f1 > best_val_f1:
@@ -128,7 +195,7 @@ def train_fold(
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
-    return model, best_val_f1
+    return model, best_val_f1, train_losses, val_losses, train_accs, val_accs
 
 
 def cross_validation(
@@ -136,7 +203,7 @@ def cross_validation(
         labels: List[int],
         device: torch.device,
         config: Dict[str, Any]
-) -> ModelEnsemble:
+) -> Tuple[ModelEnsemble, List[float], List[float], List[float], List[float]]:
     """
     K折交叉验证训练
     """
@@ -144,6 +211,12 @@ def cross_validation(
     ensemble = ModelEnsemble()  # 创建空的集成模型
     # 生成一个唯一值
     unique_value = str(hash(tuple(config.items())))
+
+    # Initialize lists to store aggregated metrics across folds
+    all_train_losses = []
+    all_val_losses = []
+    all_train_accs = []
+    all_val_accs = []
 
     logger.info(f"开始新一轮的K折交叉验证训练, 索引为: {unique_value}, 具体参数为: {config}")
     # 将texts拆分为训练集(数量为1-1/折数) 和验证集(数量为1/折数)
@@ -175,12 +248,34 @@ def cross_validation(
             sampler=val_sampler
         )
 
-        # 训练模型
-        model, val_f1 = train_fold(model, train_loader, val_loader, device, config)
+        # 训练模型 - now includes metrics for plotting
+        model, val_f1, train_losses, val_losses, train_accs, val_accs = train_fold(model, train_loader, val_loader, device, config)
         logger.info(f"索引 {unique_value} 完成训练第 {fold} 折，F1分数: {val_f1:.4f}")
 
         # 将模型和验证F1分数添加到集成模型中
         ensemble.add_model(model, val_f1)
+
+        # Store metrics from this fold
+        if fold == 0:
+            # Initialize with the first fold's metrics
+            all_train_losses = train_losses
+            all_val_losses = val_losses
+            all_train_accs = train_accs
+            all_val_accs = val_accs
+        else:
+            # Average the metrics across folds
+            for i in range(len(train_losses)):
+                if i < len(all_train_losses):
+                    all_train_losses[i] = (all_train_losses[i] * fold + train_losses[i]) / (fold + 1)
+                    all_val_losses[i] = (all_val_losses[i] * fold + val_losses[i]) / (fold + 1)
+                    all_train_accs[i] = (all_train_accs[i] * fold + train_accs[i]) / (fold + 1)
+                    all_val_accs[i] = (all_val_accs[i] * fold + val_accs[i]) / (fold + 1)
+                else:
+                    # If current fold has more epochs than previous ones, append values
+                    all_train_losses.append(train_losses[i])
+                    all_val_losses.append(val_losses[i])
+                    all_train_accs.append(train_accs[i])
+                    all_val_accs.append(val_accs[i])
 
     # 打印所有模型的信息
     logger.info(
@@ -188,7 +283,7 @@ def cross_validation(
     for info in ensemble.get_model_info():
         logger.info(f"\t 模型下标(折数) {info['model_index']}: F1分数 = {info['val_f1']:.4f}")
 
-    return ensemble
+    return ensemble, all_train_losses, all_val_losses, all_train_accs, all_val_accs
 
 
 def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: torch.device) -> float:
@@ -209,7 +304,7 @@ def objective(trial: optuna.Trial, texts: List[str], labels: List[int], device: 
         'num_classes': 2
     }
 
-    ensemble = cross_validation(texts, labels, device, config, True)
+    ensemble, _, _, _, _ = cross_validation(texts, labels, device, config)
     return ensemble.best_val_f1
 
 
@@ -252,7 +347,11 @@ def main():
 
     # 使用最佳配置进行交叉验证训练
     logger.info(f"使用最佳超参数进行最终训练，best_config具体数值为: {best_config}")
-    final_ensemble = cross_validation(texts, labels, device, best_config)
+    final_ensemble, train_losses, val_losses, train_accs, val_accs = cross_validation(texts, labels, device, best_config)
+
+    # 绘制训练曲线
+    plot_curves(train_losses, val_losses, train_accs, val_accs)
+    logger.info("训练曲线已保存到 outputs/loss_curve_advanced.png 和 outputs/accuracy_curve_advanced.png")
 
     # 保存集成模型
     os.makedirs('outputs/ensemble', exist_ok=True)
